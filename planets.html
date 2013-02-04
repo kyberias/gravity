@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>    
+<script src="sylvester.js"></script>    
+    <title></title>
+
+    <style>
+        body {
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="tutorial" width="500" height="500"></canvas>
+
+<script type="text/javascript">
+
+    var canvasHeight = 500, canvasWidth = 500;
+    var zoom = 0.5;
+    var canvasLength = 450000 * 1000;
+    var cG = 6.67384 * 0.00000000001;
+    var canvas;
+    var ctx;
+    var globalTime = 0;
+    var timeStep = 200;
+
+    var bodies = [
+        {
+            name: 'Earth',
+            mass: 5.9736 * 1000000000000000000000000,
+            position: $V([0, 0]),
+            velocity: $V([-12, 0]),
+            strokeStyle: "#7777DD",
+        },
+
+        {
+            name: 'Moon',
+            mass: 7.3477 * 10000000000000000000000,
+            position: $V([0, 384399 * 1000]),
+            velocity: $V([950,0]),
+            strokeStyle: "#888888"
+        }
+    ];
+
+    function updateBodyByG(puller, actor) {
+        // initial momentum
+        var p0_ = actor.velocity.multiply(actor.mass);
+
+        var dist = puller.position.distanceFrom(actor.position);
+
+        // Force magnitude
+        var F = cG * puller.mass * actor.mass / (dist * dist);
+
+        // Force vector
+        var F_ = puller.position.subtract(actor.position).toUnitVector().multiply(F);
+
+        var t = timeStep;
+        var p1_ = p0_.add(F_.multiply(t));
+
+        actor.position = actor.position.add(p1_.multiply(t / actor.mass));
+        actor.velocity = p1_.multiply(1 / actor.mass);
+
+        // change of momentum
+//        var p_ = F * t; // 1 ms
+
+        // direction of momentum * |p|
+        //var p = puller.position.subtract(actor.position).multiply(p_);
+
+        actor.force = F_;
+
+
+        // final momentum
+        //var p1 = p0.multiply(p);
+
+        // update velocity
+
+        var newvel = actor.velocity.add(F_.multiply(t / actor.mass));
+        actor.velocity = newvel;
+        var newpos = actor.position.add(actor.velocity.multiply(t));
+        actor.position = newpos;
+    }
+
+    function draw() {
+        // update locations etc.
+
+        updateBodyByG(bodies[0], bodies[1]);
+        updateBodyByG(bodies[1], bodies[0]);
+
+        globalTime += timeStep;
+
+        // update velocity
+
+        // draw objects
+
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+//        ctx.fillText("vel: " + bodies[1].velocity.distanceFrom(Vector.Zero(2)), 10, 30);
+        var i;
+        for (i = 0; i < bodies.length; i++) {
+            var body = bodies[i];
+            ctx.beginPath();
+            ctx.fillStyle = "rgb(250, 0,0)";
+            ctx.strokeStyle = body.strokeStyle;
+
+            var x = body.position.e(1) * zoom / canvasLength * canvasWidth + canvasWidth / 2;
+            var y = canvasHeight / 2 - body.position.e(2) * zoom / canvasLength * canvasHeight / 2;
+
+            ctx.arc(x, y,
+                10 * zoom, 0, 2 * Math.PI, false);
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillText(body.name, x + 10, y - 10);
+            ctx.fillText("m="+body.mass , x + 10, y );
+            ctx.fillText("v=" + body.velocity.distanceFrom(Vector.Zero(2)), x + 10, y + 10 );
+            ctx.fillText("x: " + body.position.e(1), x+10, y + 20);
+            ctx.fillText("y: " + body.position.e(2), x+10, y + 30);
+        }
+
+        ctx.fillText("time: " + (globalTime / 60 / 60 / 24).toString() + " days", 10, 40);
+    }
+
+    $(document).ready(function () {
+
+        canvas = document.getElementById('tutorial');
+        ctx = canvas.getContext('2d');
+        window.setInterval(draw, 1);
+
+    });
+
+
+
+</script>
+
+</body>
+</html>
