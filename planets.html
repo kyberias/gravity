@@ -20,13 +20,13 @@
 <script type="text/javascript">
 
     var canvasHeight = 500, canvasWidth = 500;
-    var zoom = 0.5;
+    var zoom = 0.2;
     var canvasLength = 450000 * 1000;
     var cG = 6.67384 * 0.00000000001;
     var canvas;
     var ctx;
     var globalTime = 0;
-    var timeStep = 200;
+    var timeStep = 1000;
 
     var bodies = [
         {
@@ -35,6 +35,7 @@
             position: $V([0, 0]),
             velocity: $V([-12, 0]),
             strokeStyle: "#7777DD",
+            fillStyle: "#7777DD",
         },
 
         {
@@ -42,11 +43,34 @@
             mass: 7.3477 * 10000000000000000000000,
             position: $V([0, 384399 * 1000]),
             velocity: $V([950,0]),
-            strokeStyle: "#888888"
-        }
+            strokeStyle: "#888888",
+            fillStyle: "#888888"
+    },
+
+    {
+        name: 'Moon 2',
+        mass: 7.3477 * 10000000000000000000000,
+        position: $V([0, -384399 * 1000]),
+    velocity: $V([-950,0]),
+    strokeStyle: "#888888",
+    fillStyle: "#888888"
+    },
+
+    {
+        name: 'Moon 3',
+        mass: 7.3477 * 10000000000000000000000,
+    position: $V([-384399 * 1000, 0]),
+    velocity: $V([0,250]),
+    strokeStyle: "#888888",
+    fillStyle: "#888888"
+    }
     ];
 
-    function updateBodyByG(puller, actor) {
+    function updateLocation(actor, t) {
+        actor.position = actor.position.add(actor.velocity.multiply(t));
+    }
+
+    function updateVelocityByG(puller, actor) {
         // initial momentum
         var p0_ = actor.velocity.multiply(actor.mass);
 
@@ -61,7 +85,7 @@
         var t = timeStep;
         var p1_ = p0_.add(F_.multiply(t));
 
-        actor.position = actor.position.add(p1_.multiply(t / actor.mass));
+//        actor.position = actor.position.add(p1_.multiply(t / actor.mass));
         actor.velocity = p1_.multiply(1 / actor.mass);
 
         // change of momentum
@@ -78,17 +102,34 @@
 
         // update velocity
 
-        var newvel = actor.velocity.add(F_.multiply(t / actor.mass));
+        /*var newvel = actor.velocity.add(F_.multiply(t / actor.mass));
         actor.velocity = newvel;
         var newpos = actor.position.add(actor.velocity.multiply(t));
-        actor.position = newpos;
+        actor.position = newpos;*/
+    }
+
+    function mapCoordinates(x, y) {
+        return [x * zoom / canvasLength * canvasWidth + canvasWidth / 2,
+            canvasHeight / 2 - y * zoom / canvasLength * canvasHeight];
     }
 
     function draw() {
         // update locations etc.
 
-        updateBodyByG(bodies[0], bodies[1]);
-        updateBodyByG(bodies[1], bodies[0]);
+        var i;
+        for (i = 0; i < bodies.length; i++) {
+            for (j = i+1; j < bodies.length; j++) {
+                if (j != i) {
+                    updateVelocityByG(bodies[i], bodies[j]);
+                    updateVelocityByG(bodies[j], bodies[i]);
+                }
+            }
+        }
+        for (i = 0; i < bodies.length; i++) {
+            updateLocation(bodies[i], timeStep);
+        }
+            //        updateBodyByG(bodies[0], bodies[1]);
+//        updateBodyByG(bodies[1], bodies[0]);
 
         globalTime += timeStep;
 
@@ -97,30 +138,31 @@
         // draw objects
 
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-//        ctx.fillText("vel: " + bodies[1].velocity.distanceFrom(Vector.Zero(2)), 10, 30);
-        var i;
+        //ctx.fillText("vel: " + bodies[1].velocity.distanceFrom(Vector.Zero(2)), 10, 30);
         for (i = 0; i < bodies.length; i++) {
             var body = bodies[i];
             ctx.beginPath();
-            ctx.fillStyle = "rgb(250, 0,0)";
+            ctx.fillStyle = body.fillStyle;
             ctx.strokeStyle = body.strokeStyle;
 
-            var x = body.position.e(1) * zoom / canvasLength * canvasWidth + canvasWidth / 2;
-            var y = canvasHeight / 2 - body.position.e(2) * zoom / canvasLength * canvasHeight / 2;
+            var coords = mapCoordinates(body.position.e(1), body.position.e(2));
+            var x = coords[0];
+            var y = coords[1];
 
             ctx.arc(x, y,
                 10 * zoom, 0, 2 * Math.PI, false);
             ctx.lineWidth = 1;
+            ctx.fill();
             ctx.stroke();
 
             ctx.fillText(body.name, x + 10, y - 10);
-            ctx.fillText("m="+body.mass , x + 10, y );
-            ctx.fillText("v=" + body.velocity.distanceFrom(Vector.Zero(2)), x + 10, y + 10 );
-            ctx.fillText("x: " + body.position.e(1), x+10, y + 20);
-            ctx.fillText("y: " + body.position.e(2), x+10, y + 30);
+            //ctx.fillText("m="+body.mass , x + 10, y );
+            //ctx.fillText("v=" + body.velocity.distanceFrom(Vector.Zero(2)), x + 10, y + 10 );
+            //ctx.fillText("x: " + body.position.e(1), x+10, y + 20);
+            //ctx.fillText("y: " + body.position.e(2), x+10, y + 30);
         }
 
-        ctx.fillText("time: " + (globalTime / 60 / 60 / 24).toString() + " days", 10, 40);
+        //ctx.fillText("time: " + (globalTime / 60 / 60 / 24).toString() + " days", 10, 40);
     }
 
     $(document).ready(function () {
