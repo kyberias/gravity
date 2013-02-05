@@ -50,6 +50,7 @@
     var ctx;
     var globalTime = 0;
     var timeStep = 1000;
+    var framecount = 0;
 
     var bodies = [
         {
@@ -166,6 +167,19 @@
         //ctx.fillText("vel: " + bodies[1].velocity.distanceFrom(Vector.Zero(2)), 10, 30);
         for (i = 0; i < bodies.length; i++) {
             var body = bodies[i];
+
+            if (body.trails.length > 0) {
+                var t;
+                for (t = 0; t < body.trails.length; t++) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = "#222222";
+                    var trailcoords = mapCoordinates(body.trails[t][0], body.trails[t][1]);
+                    ctx.arc(trailcoords[0], trailcoords[1], 10 * zoom, 0, 2 * Math.PI, false);
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+
             ctx.beginPath();
             ctx.fillStyle = body.fillStyle;
             ctx.strokeStyle = body.strokeStyle;
@@ -181,16 +195,31 @@
             ctx.stroke();
 
             ctx.fillText(body.name, x + 10, y - 10);
+
+            if (framecount % 30 == 0) {
+                body.trails.push([body.position.e(1), body.position.e(2)]);
+                if (body.trails.length > 100) {
+                    body.trails.shift(); // pop oldest away
+                }
+            }
+
             //ctx.fillText("m="+body.mass , x + 10, y );
             //ctx.fillText("v=" + body.velocity.distanceFrom(Vector.Zero(2)), x + 10, y + 10 );
             //ctx.fillText("x: " + body.position.e(1), x+10, y + 20);
             //ctx.fillText("y: " + body.position.e(2), x+10, y + 30);
         }
 
+        framecount++;
+
         //ctx.fillText("time: " + (globalTime / 60 / 60 / 24).toString() + " days", 10, 40);
     }
 
     $(document).ready(function () {
+
+        var i;
+        for (i = 0; i < bodies.length; i++) {
+            bodies[i].trails = [];
+        }
 
         var canv = $("#spacecanvas");
         canvas = canv.get(0);
