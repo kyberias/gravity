@@ -4,7 +4,8 @@
 <head>
     <meta charset="utf-8" />
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>    
-<script src="sylvester.js"></script>    
+<script src="sylvester.js"></script>
+    <script src="jquery_mousewheel_plugin.js"></script>
     <title></title>
 
     <style>
@@ -170,6 +171,10 @@
         canvas = document.getElementById('tutorial');
         ctx = canvas.getContext('2d');
         window.setInterval(draw, 1);
+
+        $("#tutorial").mousewheel(function(ev, delta) {
+            zoom += delta * 0.02;
+        });
 
     });
 
