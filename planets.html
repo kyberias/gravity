@@ -11,17 +11,38 @@
     <style>
         body {
             background-color: #000;
+            color: #eee;
+        }
+
+        canvas {
+            clear:both;
+            float:left;
+        }
+
+        div.panel {
+            float:left;
         }
     </style>
 </head>
 <body>
 
+    <div>
+        <h2>Planetary workbench</h2>
+
     <canvas id="spacecanvas" width="500" height="500"></canvas>
+        <div class="panel">
+
+            <button id="randomBodyButton">Add random</button>
+
+            <h3>Instructions</h3>
+            <p>Use mouse-wheel to zoom.</p>
+        </div>
+    </div>
 
 <script type="text/javascript">
 
     var canvasHeight = 500, canvasWidth = 500;
-    var zoom = 0.2;
+    var zoom = 0.5;
     var canvasLength = 450000 * 1000;
     var pixelMeters = 450000 * 1000 / 900;
     var cG = 6.67384 * 0.00000000001;
@@ -177,7 +198,7 @@
 
         var windowsize = getWindowSize();
         canvasWidth = windowsize.width - 200;
-        canvasHeight = windowsize.height - 30;
+        canvasHeight = windowsize.height - 100;
 
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
