@@ -169,15 +169,20 @@
             var body = bodies[i];
 
             if (body.trails.length > 0) {
+                ctx.beginPath();
+                ctx.strokeStyle = "#222222";
+                ctx.lineWidth = 1;
                 var t;
                 for (t = 0; t < body.trails.length; t++) {
-                    ctx.beginPath();
-                    ctx.strokeStyle = "#222222";
                     var trailcoords = mapCoordinates(body.trails[t][0], body.trails[t][1]);
-                    ctx.arc(trailcoords[0], trailcoords[1], 10 * zoom, 0, 2 * Math.PI, false);
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
+                    if (t == 0) {
+                        ctx.moveTo(trailcoords[0], trailcoords[1]);
+                    } else {
+                        ctx.lineTo(trailcoords[0], trailcoords[1]);
+                    }
+                    //ctx.arc(trailcoords[0], trailcoords[1], 10 * zoom, 0, 2 * Math.PI, false);
                 }
+                ctx.stroke();
             }
 
             ctx.beginPath();
@@ -196,7 +201,7 @@
 
             ctx.fillText(body.name, x + 10, y - 10);
 
-            if (framecount % 30 == 0) {
+            if (framecount % 20 == 0) {
                 body.trails.push([body.position.e(1), body.position.e(2)]);
                 if (body.trails.length > 100) {
                     body.trails.shift(); // pop oldest away
