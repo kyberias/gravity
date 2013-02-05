@@ -16,13 +16,14 @@
 </head>
 <body>
 
-    <canvas id="tutorial" width="500" height="500"></canvas>
+    <canvas id="spacecanvas" width="500" height="500"></canvas>
 
 <script type="text/javascript">
 
     var canvasHeight = 500, canvasWidth = 500;
     var zoom = 0.2;
     var canvasLength = 450000 * 1000;
+    var pixelMeters = 450000 * 1000 / 900;
     var cG = 6.67384 * 0.00000000001;
     var canvas;
     var ctx;
@@ -110,8 +111,9 @@
     }
 
     function mapCoordinates(x, y) {
-        return [x * zoom / canvasLength * canvasWidth + canvasWidth / 2,
-            canvasHeight / 2 - y * zoom / canvasLength * canvasHeight];
+        return [x * zoom / pixelMeters /** canvasWidth*/ + canvasWidth / 2,
+
+            canvasHeight / 2 - y * zoom / pixelMeters /** canvasHeight*/];
     }
 
     function draw() {
@@ -138,7 +140,8 @@
 
         // draw objects
 
-        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        ctx.fillStyle = "#111122";
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
         //ctx.fillText("vel: " + bodies[1].velocity.distanceFrom(Vector.Zero(2)), 10, 30);
         for (i = 0; i < bodies.length; i++) {
             var body = bodies[i];
@@ -168,16 +171,55 @@
 
     $(document).ready(function () {
 
-        canvas = document.getElementById('tutorial');
+        var canv = $("#spacecanvas");
+        canvas = canv.get(0);
         ctx = canvas.getContext('2d');
-        window.setInterval(draw, 1);
 
-        $("#tutorial").mousewheel(function(ev, delta) {
+        var windowsize = getWindowSize();
+        canvasWidth = windowsize.width - 200;
+        canvasHeight = windowsize.height - 30;
+
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+
+        canv.mousewheel(function (ev, delta) {
             zoom += delta * 0.02;
         });
 
+        window.setInterval(draw, 1);
     });
 
+    var getWindowSize = (function () {
+        var docEl = document.documentElement,
+            IS_BODY_ACTING_ROOT = docEl && docEl.clientHeight === 0;
+
+        // Used to feature test Opera returning wrong values 
+        // for documentElement.clientHeight. 
+        function isDocumentElementHeightOff() {
+            var d = document,
+                div = d.createElement('div');
+            div.style.height = "2500px";
+            d.body.insertBefore(div, d.body.firstChild);
+            var r = d.documentElement.clientHeight > 2400;
+            d.body.removeChild(div);
+            return r;
+        }
+
+        if (typeof document.clientWidth == "number") {
+            return function () {
+                return { width: document.clientWidth, height: document.clientHeight };
+            };
+        } else if (IS_BODY_ACTING_ROOT || isDocumentElementHeightOff()) {
+            var b = document.body;
+            return function () {
+                return { width: b.clientWidth, height: b.clientHeight };
+            };
+        } else {
+            return function () {
+                return { width: docEl.clientWidth, height: docEl.clientHeight };
+            };
+        }
+    })();
 
 
 </script>
