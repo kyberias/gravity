@@ -12,6 +12,8 @@
         body {
             background-color: #000;
             color: #eee;
+            /*background-image: url('star-tile-far-away.jpg');
+            background-repeat: repeat;*/
         }
 
         canvas {
@@ -35,7 +37,8 @@
             <button id="randomBodyButton">Add random</button>
 
             <h3>Instructions</h3>
-            <p>Use mouse-wheel to zoom.</p>
+            <p>Mouse-wheel to zoom.</p>
+            <p>Drag to pan.</p>
         </div>
     </div>
 
@@ -51,6 +54,7 @@
     var globalTime = 0;
     var timeStep = 1000;
     var framecount = 0;
+    var offsetX = 0, offsetY = 0;
 
     var bodies = [
         {
@@ -133,9 +137,9 @@
     }
 
     function mapCoordinates(x, y) {
-        return [x * zoom / pixelMeters /** canvasWidth*/ + canvasWidth / 2,
+        return [x * zoom / pixelMeters /** canvasWidth*/ + canvasWidth / 2 + offsetX ,
 
-            canvasHeight / 2 - y * zoom / pixelMeters /** canvasHeight*/];
+            canvasHeight / 2 - y * zoom / pixelMeters /** canvasHeight*/ + offsetY] ;
     }
 
     function draw() {
@@ -164,6 +168,7 @@
 
         ctx.fillStyle = "#111122";
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        //ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         //ctx.fillText("vel: " + bodies[1].velocity.distanceFrom(Vector.Zero(2)), 10, 30);
         for (i = 0; i < bodies.length; i++) {
             var body = bodies[i];
@@ -219,6 +224,8 @@
         //ctx.fillText("time: " + (globalTime / 60 / 60 / 24).toString() + " days", 10, 40);
     }
 
+    var dragStartX, dragStartY;
+
     $(document).ready(function () {
 
         var i;
@@ -241,8 +248,32 @@
             zoom += delta * 0.02;
         });
 
+        canv.mousedown(function (ev) {
+            console.log("mousedown: " + ev.pageX + " " + ev.pageY);
+            dragStartX = ev.pageX;
+            dragStartY = ev.pageY;
+            canv.bind("mousemove", mousemove);
+        }).mouseup(function (ev) {
+            console.log("mouseup: " + ev.pageX + " " + ev.pageY);
+            canv.unbind("mousemove", mousemove);
+            var deltaX = ev.pageX - dragStartX;
+            var deltaY = ev.pageY - dragStartY;
+        });
+
         window.setInterval(draw, 1);
     });
+
+    function mousemove(ev) {
+        console.log("mousemove: " + ev.pageX + " " + ev.pageY);
+        var deltaX = ev.pageX - dragStartX;
+        var deltaY = ev.pageY - dragStartY;
+
+        offsetX += deltaX;
+        offsetY += deltaY;
+
+        dragStartX = ev.pageX;
+        dragStartY = ev.pageY;
+    }
 
     var getWindowSize = (function () {
         var docEl = document.documentElement,
