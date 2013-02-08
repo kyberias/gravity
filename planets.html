@@ -46,27 +46,72 @@
 
     var canvasHeight = 500, canvasWidth = 500;
     var zoom = 0.5;
-    var canvasLength = 450000 * 1000;
-    var pixelMeters = 450000 * 1000 / 900;
+    var canvasLength = 150000000 * 1000; // 450000 * 1000;
+    var pixelMeters = canvasLength / 900;
     var cG = 6.67384 * 0.00000000001;
     var canvas;
     var ctx;
     var globalTime = 0;
-    var timeStep = 1000;
+    var timeStep = 50000;
     var framecount = 0;
     var offsetX = 0, offsetY = 0;
 
     var bodies = [
         {
+            name: 'Sun',
+            mass: 1.9891e30,
+            position: $V([0, 0]),
+            velocity: $V([0, 0]),
+            strokeStyle: "#FF3333",
+            fillStyle: "#FF3333",
+        },
+
+        {
+            name: 'Mercury',
+            mass: 3.3022e23,
+            position: $V([0, 50816900e3]),
+            velocity: $V([47.87e3, 0]),
+            strokeStyle: "#bbbbbb",
+            fillStyle: "#bbbbbb",
+        },
+
+        {
+            name: 'Venus',
+            mass: 4.8685e24,
+            position: $V([0,108939000e3]),
+            velocity: $V([35.02e3,0]),
+            strokeStyle: "#bbaaaa",
+            fillStyle: "#bbaaaa",
+        },
+
+        {
             name: 'Earth',
             mass: 5.9736 * 1000000000000000000000000,
-            position: $V([0, 0]),
-            velocity: $V([-12, 0]),
+            position: $V([150000000 * 1000, 0]),
+            velocity: $V([0, -29.78 * 1000]),
             strokeStyle: "#7777DD",
             fillStyle: "#7777DD",
         },
 
         {
+            name: 'Mars',
+            mass: 6.4185e23,
+            position: $V([0, -249209300e3]),
+            velocity: $V([-24.077*1000, 0]),
+            strokeStyle: "#888822",
+            fillStyle: "#888822",
+        },
+
+        {
+            name: 'Jupiter',
+            mass: 1.8986e27,
+            position: $V([0, 816520800e3]),
+            velocity: $V([13.07e3, 0]),
+            strokeStyle: "#55bb55",
+            fillStyle: "#55bb55",
+        },
+
+        /*{
             name: 'Moon',
             mass: 7.3477 * 10000000000000000000000,
             position: $V([0, 384399 * 1000]),
@@ -91,7 +136,7 @@
     velocity: $V([0,250]),
     strokeStyle: "#888888",
     fillStyle: "#888888"
-    }
+    }*/
     ];
 
     function updateLocation(actor, t) {
@@ -113,37 +158,18 @@
         var t = timeStep;
         var p1_ = p0_.add(F_.multiply(t));
 
-//        actor.position = actor.position.add(p1_.multiply(t / actor.mass));
         actor.velocity = p1_.multiply(1 / actor.mass);
 
-        // change of momentum
-//        var p_ = F * t; // 1 ms
-
-        // direction of momentum * |p|
-        //var p = puller.position.subtract(actor.position).multiply(p_);
-
         actor.force = F_;
-
-
-        // final momentum
-        //var p1 = p0.multiply(p);
-
-        // update velocity
-
-        /*var newvel = actor.velocity.add(F_.multiply(t / actor.mass));
-        actor.velocity = newvel;
-        var newpos = actor.position.add(actor.velocity.multiply(t));
-        actor.position = newpos;*/
     }
 
     function mapCoordinates(x, y) {
         return [x * zoom / pixelMeters /** canvasWidth*/ + canvasWidth / 2 + offsetX ,
-
             canvasHeight / 2 - y * zoom / pixelMeters /** canvasHeight*/ + offsetY] ;
     }
 
     function draw() {
-        // update locations etc.
+        // Update velocities and locations of objects based on gravity.
 
         var i;
         for (i = 0; i < bodies.length; i++) {
@@ -157,15 +183,10 @@
         for (i = 0; i < bodies.length; i++) {
             updateLocation(bodies[i], timeStep);
         }
-            //        updateBodyByG(bodies[0], bodies[1]);
-//        updateBodyByG(bodies[1], bodies[0]);
 
         globalTime += timeStep;
 
-        // update velocity
-
         // draw objects
-
         ctx.fillStyle = "#111122";
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
         //ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -212,11 +233,6 @@
                     body.trails.shift(); // pop oldest away
                 }
             }
-
-            //ctx.fillText("m="+body.mass , x + 10, y );
-            //ctx.fillText("v=" + body.velocity.distanceFrom(Vector.Zero(2)), x + 10, y + 10 );
-            //ctx.fillText("x: " + body.position.e(1), x+10, y + 20);
-            //ctx.fillText("y: " + body.position.e(2), x+10, y + 30);
         }
 
         framecount++;
@@ -258,6 +274,28 @@
             canv.unbind("mousemove", mousemove);
             var deltaX = ev.pageX - dragStartX;
             var deltaY = ev.pageY - dragStartY;
+        });
+
+        $('#randomBodyButton').click(function () {
+            var sumv = $V([0, 0]), i=0;
+
+            for (i = 0; i < bodies.length; i++) {
+                sumv.add(bodies[i].velocity);
+            }
+
+            var vel = $V([-950, 0]);// sumv.multiply(1 / bodies.length);
+            var pos = $V([Math.random() * canvasLength - canvasLength / 2,
+                Math.random() * canvasLength - canvasLength / 2]);
+
+            bodies.push({
+                name: "Random",
+                mass: 7.3477 * 10000000000000000000000,
+                position: pos,
+                velocity: vel,
+                strokeStyle: "#888888",
+                fillStyle: "#0000FF",
+                trails:[]
+            });
         });
 
         window.setInterval(draw, 1);
